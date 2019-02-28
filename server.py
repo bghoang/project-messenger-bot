@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 db = MBDataBase()
 
-PAGE_ACCESS_TOKEN = "EAAHuL8qSgV4BANhmwjnD9ZBpwkTu88K0ZAkKHy3Ltzz7nYZButOQm39NZB5qZAHF2r5998vAuKjjOLC0gSmou8VY7EdVVmA3uIheXDFvJIz8poDjtcBnfDo44SyK4mwlYQF3noNOdGZCx6J8xNwyiGIAvhePQScklGRJZBcOj0ncwZDZD"
+PAGE_ACCESS_TOKEN = "EAAHuL8qSgV4BAP0lavgFCt2yHqHZAbcm2YTAiPjYCVZBdilNaY94ZCjiPHJchj9zI0Va5qApGEuBR06wia9vQp8lPZBVuVust1RfUZBy0QAGQGm3daggm34AtttgTOesXGEi3USJG6ZAOUtlPXb1HqCXXoKcwS1vWOec19RcZCDNAZDZD"
 bot = Bot(PAGE_ACCESS_TOKEN)
 VERIFICATION_TOKEN = "chicken123"
 
@@ -27,25 +27,64 @@ def verify():
 def webhook():
     data = request.get_json()
     log(data)
-    # Convert every key to a string
+    # Convert every key to a string, this will contain all the information 
+    # about the message 
     data = dict([(str(k), v) for k, v in data.items()])
+    #print("This is the data", data)
     # Check if the message was sent to my page
     if data['object'] == 'page':
-      # Get the 'entry' in the message
+      # Get the 'entry' in the message, which is a dictionary
       for entry in data['entry']:
+        # For each of the message, get the messaging field
         for messaging_event in entry['messaging']:
+          # get the id field in the from the sender field in the dictionary
           sender_id = messaging_event['sender']['id']
-                
-          # Echo Bot
+            
+          '''               Echo Bot                      '''
+          # Check if the message_event has a field called message
           if messaging_event.get('message'):
-            if messaging_event['message'].get('text'):
-              # Retrieve the message
+            # Get the text value from the message fieldx
+            if messaging_event['message'].get('attachments'):
+              print("this might be a link")
+              break
+            elif messaging_event['message'].get('text'):
+              #if messaging_event['message']['attachments'][0]['type'] == "fallback":
+                #print("this is a link")
+
+              #else:
+                # Retrieve the message
               response = messaging_event['message']['text']
-              # Echo the message
+                # Echo the message
               bot.send_text_message(sender_id, response)
- 
+                
+              
+              '''
+              url_button=[
+                {
+                  "type": "web_url",
+                  "url": "<URL_TO_OPEN_IN_WEBVIEW>",
+                  "title": "<BUTTON_TEXT>",
+                }
+              ]
+              '''
+              
+            '''             Echo a picture back           '''
+            if messaging_event['message'].get('attachments'):
+              if messaging_event['message']['attachments'][0]['type'] == "image":
+                # Get the payload content which is in the first index of the messaging_event['message']['attachments'] list 
+                payload = messaging_event['message']['attachments'][0]['payload']
+                # Get the url link from the payload dict
+                url = payload['url']
+                bot.send_image_url(sender_id, url) 
+                
+              else: 
+                print("it is not an image")
+                
+              #print("this is the payload content in messaging:", messaging_event['message']['attachments'][0]['type'])
+            
+    
             # Get last message, print the time and message to the database
-            if db.get_user(sender_id) == False:
+            '''if db.get_user(sender_id) == False:
                 user ={}
                 user["Last message time"] = time()
                 user["message"] = []
@@ -55,7 +94,7 @@ def webhook():
             user["message"].append(messaging_event['message']['text'])           
             db.update_user(sender_id, user)
             print(db)
-            
+            '''
     return 'OK', 200
 
 # Display the data to 
